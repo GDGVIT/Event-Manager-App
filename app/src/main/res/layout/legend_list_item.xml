@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/legend_list_item_details"
+    android:layout_width="150dp"
+    android:layout_height="25dp"
+    android:layout_margin="40dp"
+    android:orientation="horizontal"
+    >
+
+    <ImageView
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:layout_gravity="center"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="7dp"
+        android:src="@drawable/ic_brightness_1_black_24dp" />
+
+    <TextView
+        android:id="@+id/legend_name"
+        android:layout_width="81dp"
+        android:layout_height="15dp"
+        android:layout_marginLeft="17dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginBottom="4dp"
+        android:text="Hi"
+        android:textColor="@color/colorWhite"
+        android:textSize="12sp" />
+
+</LinearLayout>

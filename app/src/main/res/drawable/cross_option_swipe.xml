@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="-2dp"
+    >
+    <layer-list>
+
+        <!-- Background -->
+        <item android:height="80dp">
+            <shape>
+                <stroke
+                    android:width="0.3dp"
+                    android:color="#D3D3D3"></stroke>
+                <solid android:color="@android:color/white" />
+
+                <corners
+                    android:bottomRightRadius="10dp"
+                    android:topRightRadius="10dp"></corners>
+            </shape>
+        </item>
+
+    </layer-list>
+
+</inset><!--<?xml version="1.0" encoding="utf-8"?>--><!--<layer-list xmlns:android="http://schemas.android.com/apk/res/android">--><!--<item>--><!--<shape>-->
+
+    <!--<solid-->
+
+    <!--android:color="#FFFFFF">--><!--</solid>--><!--<corners--><!--android:bottomRightRadius="10dp"--><!--android:topRightRadius="10dp"--><!--/>--><!--</shape>--><!--</item>--><!--<item android:top="1dp">--><!--<shape--><!--android:dither="true"--><!--android:shape="rectangle" >--><!--<gradient--><!--android:angle="270"--><!--android:endColor="#00000000"--><!--android:startColor="#10000000" />-->
+
+    <!--<size android:height="8dp" />--><!--</shape>--><!--</item>-->
+
+    <!--</layer-list>--><!--<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >-->
+
+    <!--<item android:bottom="8dp">--><!--<shape android:shape="rectangle" >--><!--<size android:height="1dp" />-->
+
+    <!--<solid android:color="#43000000" />--><!--</shape>--><!--</item>--><!--<item android:top="1dp">--><!--<shape--><!--android:dither="true"--><!--android:shape="rectangle" >--><!--<gradient--><!--android:angle="270"--><!--android:endColor="#00000000"--><!--android:startColor="#10000000" />-->
+
+    <!--<size android:height="8dp" />--><!--</shape>--><!--</item>-->
+
+    <!--</layer-list>-->
+
+    <!--<shape xmlns:android="http://schemas.android.com/apk/res/android">-->
+
+    <!--<stroke--><!--android:color="#D3D3D3"--><!--android:width="2dp"--><!--&gt;--><!--</stroke>--><!--<solid-->
+
+    <!--android:color="#FFFFFF">--><!--</solid>--><!--<corners--><!--android:bottomRightRadius="10dp"--><!--android:topRightRadius="10dp"--><!--/>--><!--<--><!--</shape>-->
+
