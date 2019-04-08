@@ -12,7 +12,8 @@ public class Legend implements Serializable {
     public Legend() {
     }
 
-    public Legend(String name, String color) {
+    public Legend(String id ,String name, String color) {
+        this.id=id;
         this.name = name;
         this.color = color;
     }

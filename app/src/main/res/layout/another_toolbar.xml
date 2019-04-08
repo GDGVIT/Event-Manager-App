@@ -17,25 +17,13 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-
-            <ImageView
-                android:id="@+id/back_button_dsc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left"
-                android:padding="16dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_arrow_back_black_24dp" />
-
             <TextView
                 android:gravity="center"
                 android:textStyle="bold"
                 android:textSize="20sp"
-                android:layout_marginRight="20dp"
+                android:layout_marginRight="18dp"
                 android:textColor="@color/colorBlack"
-                android:id="@+id/toolbar_name"
+                android:id="@+id/toolbar_name_another"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 

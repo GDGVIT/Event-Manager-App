@@ -18,7 +18,7 @@ import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIP
 import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
 import static android.support.v7.widget.helper.ItemTouchHelper.RIGHT;
 
-public class SwipeController extends ItemTouchHelper.Callback {
+public class SwipeControllerNC extends ItemTouchHelper.Callback {
 
     enum ButtonsState {
         GONE,
@@ -38,7 +38,7 @@ public class SwipeController extends ItemTouchHelper.Callback {
 
     private static final float buttonWidth = 300;
 
-    public SwipeController(SwipeControllerActions buttonsActions) {
+    public SwipeControllerNC(SwipeControllerActions buttonsActions) {
         this.buttonsActions = buttonsActions;
     }
 
@@ -121,7 +121,7 @@ public class SwipeController extends ItemTouchHelper.Callback {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP) {
-                    SwipeController.super.onChildDraw(c, recyclerView, viewHolder, 0F, dY, actionState, isCurrentlyActive);
+                    SwipeControllerNC.super.onChildDraw(c, recyclerView, viewHolder, 0F, dY, actionState, isCurrentlyActive);
                     recyclerView.setOnTouchListener(new View.OnTouchListener() {
                         @Override
                         public boolean onTouch(View v, MotionEvent event) {
@@ -162,7 +162,7 @@ public class SwipeController extends ItemTouchHelper.Callback {
         RectF leftButton = new RectF(itemView.getLeft(), itemView.getTop(), itemView.getLeft() + buttonWidthWithoutPadding, itemView.getBottom());
         p.setColor(Color.WHITE);
         c.drawRoundRect(leftButton, corners, corners, p);
-        drawText("COMPLETED", c, leftButton, p);
+        drawText("NOT COMPLETED", c, leftButton, p);
 
         RectF rightButton = new RectF(itemView.getRight() - buttonWidthWithoutPadding, itemView.getTop(), itemView.getRight(), itemView.getBottom());
         p.setColor(Color.WHITE);
@@ -178,14 +178,14 @@ public class SwipeController extends ItemTouchHelper.Callback {
     }
 
     private void drawText(String text, Canvas c, RectF button, Paint p) {
-        float textSize = 32;
+        float textSize = 30;
         p.setColor(Color.BLUE);
         p.setAntiAlias(true);
         p.setTextSize(textSize);
 
         float textWidth = p.measureText(text);
 
-      //  Bitmap bmp = BitmapFactory.decodeResource(this, R.drawable.select_option_swipe);
+        //  Bitmap bmp = BitmapFactory.decodeResource(this, R.drawable.select_option_swipe);
         //c.drawBitmap(bmp, button.centerX() - (bmp.getWidth() / 2), button.centerY() - (bmp.getHeight()/2), null);
 
 

@@ -1,77 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@drawable/inputs"
     android:layout_width="match_parent"
     android:layout_height="86dp"
     android:layout_marginTop="30dp"
+    android:background="@drawable/inputs"
     android:orientation="horizontal"
-    >
+    android:elevation="5dp"
+    android:paddingBottom="3dp"
+    android:layout_marginBottom="10dp"
+    android:layout_marginHorizontal="25dp">
 
     <TextView
         android:id="@+id/task_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="23dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:text="Task Name"
-        android:textSize="18sp"
-        android:textStyle="bold"/>
-
-    <TextView
-        android:id="@+id/task_date"
+        android:textSize="17sp"
         android:textStyle="bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="190dp"
-        android:layout_marginTop="27dp"
-        android:text="10.10.2019"
-        android:textSize="12dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginBottom="40dp"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.074"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
-
-
-    <!--<GridView-->
-        <!--android:id="@+id/grid_view_selected_user_image"-->
-        <!--android:layout_width="100dp"-->
-        <!--android:layout_height="30dp"-->
-        <!--android:layout_below="@id/task_date"-->
-        <!--android:orientation="horizontal"-->
-        <!--tools:listitem="@layout/selected_user_photo_list_item">-->
-    <!--</GridView>-->
-
-    <!--<LinearLayout-->
-        <!--android:orientation="vertical"-->
-        <!--android:id="@+id/image_bookmark"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content">-->
-    <!--</LinearLayout>-->
-
-    <!--<TextView-->
-        <!--android:id="@+id/image_bookmark"-->
-        <!--android:layout_width="50dp"-->
-        <!--android:layout_height="50dp"-->
-        <!--android:layout_marginTop="-6dp"-->
-
-        <!--android:layout_alignParentRight="true"-->
-        <!--/>-->
     <ImageView
         android:id="@+id/image_bookmark"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="-6dp"
-        android:layout_marginRight="0dp"
+        android:layout_width="32dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:src="@drawable/ic_bookmark_red_24dp"
-        />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.974"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/secondary_recycler_view"
-        android:layout_width="330dp"
-        android:layout_marginLeft="30dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
-        android:layout_below="@id/task_name">
-    </android.support.v7.widget.RecyclerView>
+        android:layout_width="wrap_content"
+        android:layout_height="44dp"
+        android:layout_below="@id/task_name"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="8dp"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.705" />
 
-</RelativeLayout>
+    <TextView
+        android:id="@+id/task_number_of_users"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/edit_text_background"
+        android:padding="5dp"
+        android:text="+ 0"
+        android:textStyle="bold"
+        android:textColor="@color/colorWhite"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.293"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.783" />
+
+</android.support.constraint.ConstraintLayout>

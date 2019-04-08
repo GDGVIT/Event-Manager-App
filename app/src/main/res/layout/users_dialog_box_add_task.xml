@@ -11,19 +11,19 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="15dp"
-        android:text="Select people for the task"
+        android:text="Select people for the add task"
         android:textSize="20sp"
         android:textStyle="bold" />
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/grid_view_people"
+        android:id="@+id/grid_view_people_add_task"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="15dp"
         android:numColumns="6" />
 
     <Button
-        android:id="@+id/btn_add_person_cancel"
+        android:id="@+id/btn_add_person_cancel_add_task"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"

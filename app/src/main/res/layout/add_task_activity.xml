@@ -5,22 +5,22 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <include layout="@layout/toolbar" />
+    <include layout="@layout/another_toolbar" />
 
     <android.support.v4.widget.NestedScrollView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="70dp">
 
         <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/tv"
                 android:layout_width="wrap_content"
                 android:layout_height="18dp"
                 android:layout_marginLeft="20dp"
-                android:layout_marginTop="80dp"
                 android:text="Add Person"
                 android:textColor="@color/colorBlack"
                 android:textSize="16sp"
@@ -34,11 +34,14 @@
                 android:layout_margin="20dp"
                 android:orientation="horizontal">
 
+
                 <android.support.design.widget.FloatingActionButton
                     android:id="@+id/floating_button"
                     android:layout_width="35dp"
                     android:layout_height="33dp"
-                    android:layout_marginRight="10dp"
+                    android:layout_below="@id/list_view_task_user"
+                    android:layout_margin="20dp"
+                    app:backgroundTint="@color/colorGrey"
                     android:background="@color/colorWhite"
                     android:src="@drawable/ic_add_black_24dp"
                     app:fabSize="mini" />
@@ -47,9 +50,8 @@
                 <android.support.v7.widget.RecyclerView
                     android:id="@+id/grid_view_people_selected"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"/>
 
-                </android.support.v7.widget.RecyclerView>
             </LinearLayout>
 
             <TextView
@@ -109,7 +111,7 @@
                 android:textStyle="bold" />
 
             <Button
-                android:id="@+id/btn_add_lable"
+                android:id="@+id/btn_add_label"
                 android:layout_width="120dp"
                 android:layout_height="30dp"
                 android:layout_below="@+id/tv_labels"
@@ -118,6 +120,7 @@
                 android:layout_marginBottom="20dp"
                 android:background="@drawable/button"
                 android:drawableLeft="@drawable/ic_add_black_24dp"
+                android:paddingLeft="10dp"
                 android:text="Add Label"
                 android:textColor="@color/colorWhite"
                 android:textSize="13dp" />
@@ -126,7 +129,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/btn_add_lable"
+                android:layout_below="@id/btn_add_label"
                 android:layout_gravity="left"
                 android:layout_marginLeft="20dp"
                 android:layout_marginBottom="100dp"

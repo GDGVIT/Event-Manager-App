@@ -16,19 +16,6 @@ public class Events implements Serializable {
     private String id;
     private String completed;
 
-//    public View btnDelete;
-//    public SwipeLayout swipeLayout;
-
-//    public Events(View v) {
-//        swipeLayout = (SwipeLayout)v.findViewById(R.id.swipe_layout);
-//        btnDelete = v.findViewById(R.id.delete);
-//        // btnEdit = v.findViewById(R.id.edit_query);
-//        //name = (TextView) v.findViewById(R.id.name);
-//        swipeLayout.setShowMode(SwipeLayout.ShowMode.LayDown);
-//    }
-
-
-
     public Events() {
     }
 
@@ -74,12 +61,9 @@ public class Events implements Serializable {
     public HashMap<String,String> toEventsFirebaseObject() {
         HashMap<String,String> event =  new HashMap<String,String>();
         event.put("name", name);
-        //todo.put("message", message);
         event.put("date", date);
         event.put("completed", completed);
         return event;
     }
-
-
 
 }

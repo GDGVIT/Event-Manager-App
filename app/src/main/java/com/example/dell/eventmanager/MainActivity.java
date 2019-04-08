@@ -1,6 +1,5 @@
 package com.example.dell.eventmanager;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
@@ -13,8 +12,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.example.dell.eventmanager.Event.AddEventActivity;
-import com.example.dell.eventmanager.Event.Events;
 import com.example.dell.eventmanager.Event.EventsActivity;
 import com.example.dell.eventmanager.User.Users;
 import com.google.android.gms.auth.api.Auth;
@@ -83,12 +80,11 @@ public class MainActivity extends AppCompatActivity {
                             new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull final DataSnapshot dataSnapshot) {
-                                    for ( final DataSnapshot data : dataSnapshot.getChildren()) {
-                                        if((firebaseAuth.getCurrentUser().getDisplayName()).equals(data.child("user_name").getValue())){
-                                             }
-                                        else {
+                                    for (final DataSnapshot data : dataSnapshot.getChildren()) {
+                                        if ((firebaseAuth.getCurrentUser().getDisplayName()).equals(data.child("user_name").getValue())) {
+                                        } else {
                                             String key = firebaseAuth.getCurrentUser().getUid();
-                                                    //mMessagesDatabaseReference.child("users").push().getKey();
+                                            //mMessagesDatabaseReference.child("users").push().getKey();
 
                                             final Users u = new Users();
                                             u.setUserName(firebaseAuth.getCurrentUser().getDisplayName());
@@ -104,11 +100,6 @@ public class MainActivity extends AppCompatActivity {
                                                     }
                                                 }
                                             });
-
-//                                            String userKey = mMessagesDatabaseReference.push().getKey();
-//                                            mMessagesDatabaseReference.child(userKey).child("user_name").setValue(firebaseAuth.getCurrentUser().getDisplayName());
-//                                            mMessagesDatabaseReference.child(userKey).child("user_email").setValue(firebaseAuth.getCurrentUser().getEmail());
-//                                            mMessagesDatabaseReference.child(userKey).child("user_photo").setValue(firebaseAuth.getCurrentUser().getPhotoUrl().toString());
                                         }
                                     }
                                 }
@@ -119,12 +110,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                     );
-//
-//
-//                    String userKey = mMessagesDatabaseReference.push().getKey();
-//                    mMessagesDatabaseReference.child(userKey).child("user_name").setValue(firebaseAuth.getCurrentUser().getDisplayName());
-//                    mMessagesDatabaseReference.child(userKey).child("user_email").setValue(firebaseAuth.getCurrentUser().getEmail());
-//                    mMessagesDatabaseReference.child(userKey).child("user_photo").setValue(firebaseAuth.getCurrentUser().getPhotoUrl().toString());
+
 
 
                     Intent intentToEventsActivity = new Intent(MainActivity.this, EventsActivity.class);
@@ -163,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             if (result.isSuccess()) {

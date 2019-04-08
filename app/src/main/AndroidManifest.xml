@@ -22,24 +22,20 @@
         </activity>
         <activity
             android:name=".Event.EventsActivity"
-            android:label="Dialog Box"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".Event.AddEventActivity"
-            android:label="Dialog Box"
             android:theme="@style/AppTheme.NoActionBar"
             ></activity>
         <activity
             android:name=".Task.TasksActivity"
-            android:label="Dialog Box"
+            android:parentActivityName=".Event.EventsActivity"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".Task.AddTaskActivity"
-            android:label="Dialog Box"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".Task.TaskDetailsActivity"
-            android:label="Dialog Box"
             android:theme="@style/AppTheme.NoActionBar"></activity>
 
     </application>

@@ -11,6 +11,7 @@ import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,9 +24,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +43,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -73,6 +73,8 @@ public class TaskDetailsActivity extends AppCompatActivity {
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private FirebaseStorage storage;
+    private FirebaseUser mFirebaseUser;
+    private StorageReference photoRef;
 
     Intent intentFromTasksActivity;
     String eventKey;
@@ -84,6 +86,9 @@ public class TaskDetailsActivity extends AppCompatActivity {
     FileDetailsAdapter mFileDetailsAdapter;
     private ArrayList<Users> user_list = new ArrayList<Users>();
     private ArrayList<Users> task_user_list = new ArrayList<Users>();
+
+    private ArrayList<String> items = new ArrayList<String>();
+    private ArrayList<String> urls = new ArrayList<String>();
 
     Button btnAddFile;
     Button btnTaskDelete;
@@ -97,14 +102,22 @@ public class TaskDetailsActivity extends AppCompatActivity {
     RecyclerView mUserGridView;
     private UserAdapter mUserAdapter;
 
+    Dialog fileDialog;
+    Button fabClose;
+    FloatingActionButton fabDownload;
+    FloatingActionButton fabDelete;
+
+    ImageView backButton;
+    TextView toolbarName;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.task_details_activity);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("Task Details");
-        setSupportActionBar(toolbar);
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        toolbar.setTitle("Task Details");
+//        setSupportActionBar(toolbar);
 
         if (Build.VERSION.SDK_INT >= 21) {
             Window window = getWindow();
@@ -113,9 +126,20 @@ public class TaskDetailsActivity extends AppCompatActivity {
             window.setStatusBarColor(Color.parseColor("#FF6961"));
         }
 
-        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
-        actionBar.setHomeButtonEnabled(true);
-        actionBar.setDisplayHomeAsUpEnabled(true);
+//        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+//        actionBar.setHomeButtonEnabled(true);
+//        actionBar.setDisplayHomeAsUpEnabled(true);
+
+        toolbarName = findViewById(R.id.toolbar_name);
+        toolbarName.setText("Task Details");
+        backButton = findViewById(R.id.back_button_dsc);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+
 
         intentFromTasksActivity = getIntent();
         eventKey = intentFromTasksActivity.getStringExtra("eventKey");
@@ -127,6 +151,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
         mMessagesDatabaseReferenceToUsers = mFirebaseDatabase.getReference().child("toDoList").child(eventKey).child("tasksList").child(taskKey).child("users");
         mMessagesDatabaseReferenceToAllUsers = mFirebaseDatabase.getReference().child("users");
         storage = FirebaseStorage.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
 
         taskDateTextView = findViewById(R.id.show_task_details);
 
@@ -138,13 +163,33 @@ public class TaskDetailsActivity extends AppCompatActivity {
         taskUsers.setAdapter(mTaskDetailsAdapter);
 
 
-
         fileNames = findViewById(R.id.add_files_recycler_view);
         fileNames.setLayoutManager(new LinearLayoutManager(TaskDetailsActivity.this));
-        mFileDetailsAdapter = new FileDetailsAdapter(fileNames, TaskDetailsActivity.this, new ArrayList<String>(), new ArrayList<String>());
+        mFileDetailsAdapter = new FileDetailsAdapter(fileNames, TaskDetailsActivity.this, items, urls);
         fileNames.setAdapter(mFileDetailsAdapter);
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
+
+//        mMessagesDatabaseReference.child("uploads").addListenerForSingleValueEvent(
+//                new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                        for(DataSnapshot data: dataSnapshot.getChildren()) {
+//                            String fileName = data.getKey();
+//                            String url = dataSnapshot.getValue(String.class);
+//                            Toast.makeText(TaskDetailsActivity.this, fileName, Toast.LENGTH_SHORT).show();
+//                            ((FileDetailsAdapter) fileNames.getAdapter()).update(fileName, url);
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                    }
+//                }
+//        );
+
+
         mMessagesDatabaseReference.child("uploads").addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -156,18 +201,42 @@ public class TaskDetailsActivity extends AppCompatActivity {
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                String fileName = dataSnapshot.getKey();
-                String url = dataSnapshot.getValue(String.class);
-                ((FileDetailsAdapter) fileNames.getAdapter()).update(fileName, url);
+//                items.clear();
+//                urls.clear();
+//
+//                    String fileName = dataSnapshot.getKey();
+//                    String url = dataSnapshot.getValue(String.class);
+//                    ((FileDetailsAdapter) fileNames.getAdapter()).update(fileName, url);
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//                items.clear();
+//                urls.clear();
+//                for(DataSnapshot data :dataSnapshot.getChildren()){
+//                    String fileName = dataSnapshot.getKey();
+//                    String url = dataSnapshot.getValue(String.class);
+//                    ((FileDetailsAdapter) fileNames.getAdapter()).update(fileName, url);}
+
+                items.remove(dataSnapshot.getKey());
+                urls.remove(dataSnapshot.getKey());
+
+//                int index = items.indexOf(dataSnapshot.getKey());
+//                messageList.remove(index);
+//                keyList.remove(index);
+//                mAdapter.notifyDataSetChanged();
 
             }
 
             @Override
             public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                items.clear();
+//                urls.clear();
+//                for (DataSnapshot data : dataSnapshot.getChildren()) {
+//                    String fileName = dataSnapshot.getKey();
+//                    String url = dataSnapshot.getValue(String.class);
+//                    ((FileDetailsAdapter) fileNames.getAdapter()).update(fileName, url);
+                //  }
 
             }
 
@@ -224,11 +293,9 @@ public class TaskDetailsActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (ContextCompat.checkSelfPermission(TaskDetailsActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
 
-
-                    if (textViewFileName.getText().equals(null)) {
+                    if (textViewFileName.getText().toString().equals("")) {
                         Toast.makeText(TaskDetailsActivity.this, "Please enter a name for the file...", Toast.LENGTH_SHORT).show();
                     } else {
-
                         selectPdf();
                     }
                 } else {
@@ -236,12 +303,6 @@ public class TaskDetailsActivity extends AppCompatActivity {
                 }
             }
         });
-
-//        mUserGridView = userDialog.findViewById(R.id.grid_view_people);
-//        mUserAdapter = new UserAdapter(user_list);
-//        final RecyclerView.LayoutManager mUserLayoutManager = new GridLayoutManager(getApplicationContext(), 6);
-//        mUserGridView.setLayoutManager(mUserLayoutManager);
-//        mUserGridView.setAdapter(mUserAdapter);
 
 
         fab = findViewById(R.id.floating_button_details);
@@ -251,6 +312,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
 
                 userDialog = new Dialog(TaskDetailsActivity.this);
                 userDialog.setContentView(R.layout.users_dialog_box);
+                //userDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 userDialog.show();
 
                 userCancelButton = userDialog.findViewById(R.id.btn_add_person_cancel);
@@ -268,10 +330,10 @@ public class TaskDetailsActivity extends AppCompatActivity {
 
                         mMessagesDatabaseReference.child("users").removeValue();
                         int size = task_user_list.size();
-                        Toast.makeText(TaskDetailsActivity.this, "Size is " + task_user_list.size(), Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(TaskDetailsActivity.this, "Size is " + task_user_list.size(), Toast.LENGTH_SHORT).show();
                         for (int i = 0; i < size; i++) {
 
-                            String userKey = mMessagesDatabaseReference.child("users").push().getKey();
+                            //String userKey = mMessagesDatabaseReference.child("users").push().getKey();
                             Users u = new Users();
 
                             u.setUserName(task_user_list.get(i).getUserName());
@@ -282,7 +344,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
 
                             Map<String, Object> userUpdates = new HashMap<>();
 
-                            mMessagesDatabaseReference.child("users").push().setValue(userUpdates.put(userKey, u.toUsersFirebaseObject()));
+                            mMessagesDatabaseReference.child("users").push().setValue(userUpdates.put(task_user_list.get(i).getUserKey(), u.toUsersFirebaseObject()));
                             mMessagesDatabaseReference.child("users").updateChildren(userUpdates, new DatabaseReference.CompletionListener() {
                                 @Override
                                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
@@ -309,22 +371,85 @@ public class TaskDetailsActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-                String user_name = dataSnapshot.child("user_name").getValue().toString();
-                String user_email = dataSnapshot.child("user_email").getValue().toString();
-                String user_photo = dataSnapshot.child("user_photo").getValue().toString();
-                String user_id = dataSnapshot.getKey();
 
-                user_list.add(new Users(user_id, user_name, user_email, user_photo));
+                if (mFirebaseUser.getEmail().compareTo("dscvitvellore@gmail.com") != 0) {
+
+                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+                    String user_id = dataSnapshot.getKey();
+
+                    if (mFirebaseUser.getDisplayName().equals(user_name)) {
+                        user_list.add(new Users(user_id, user_name, user_email, user_photo));
+                    }
+
+
+                } else {
+
+                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+                    String user_id = dataSnapshot.getKey();
+
+                    user_list.add(new Users(user_id, user_name, user_email, user_photo));
+
+                }
 
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+//                user_list.clear();
+//                if (mFirebaseUser.getEmail().compareTo("dscvitvellore@gmail.com") != 0) {
+//
+//                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+//                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+//                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+//                    String user_id = dataSnapshot.getKey();
+//
+//                    if (mFirebaseUser.getDisplayName().equals(user_name)) {
+//                        user_list.add(new Users(user_id, user_name, user_email, user_photo));
+//                    }
+//
+//
+//                } else {
+//
+//                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+//                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+//                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+//                    String user_id = dataSnapshot.getKey();
+//
+//                    user_list.add(new Users(user_id, user_name, user_email, user_photo));
+//
+//                }
+//
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//                user_list.clear();
+//                if (mFirebaseUser.getEmail().compareTo("dscvitvellore@gmail.com") != 0) {
+//
+//                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+//                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+//                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+//                    String user_id = dataSnapshot.getKey();
+//
+//                    if (mFirebaseUser.getDisplayName().equals(user_name)) {
+//                        user_list.add(new Users(user_id, user_name, user_email, user_photo));
+//                    }
+//
+//
+//                } else {
+//
+//                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+//                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+//                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+//                    String user_id = dataSnapshot.getKey();
+//
+//                    user_list.add(new Users(user_id, user_name, user_email, user_photo));
+//
+//                }
 
             }
 
@@ -432,12 +557,12 @@ public class TaskDetailsActivity extends AppCompatActivity {
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -447,6 +572,7 @@ public class TaskDetailsActivity extends AppCompatActivity {
             return true;
         }
         if (id == android.R.id.home) {
+
             onBackPressed();
             return true;
         }
@@ -471,11 +597,21 @@ public class TaskDetailsActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(@NonNull TaskDetailsViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull TaskDetailsViewHolder holder, final int position) {
             final Users users = task_user_list.get(position);
             holder.userTaskName.setText(users.getUserName());
             Picasso.with(TaskDetailsActivity.this).load(users.getUserPhotoUrl()).transform(new com.example.dell.eventmanager.Task.TaskDetailsActivity.TaskDetailsAdapter.CircleTransform()).into(holder.userTaskPhoto);
 
+            holder.userTaskName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    task_user_list.remove(users);
+                    String userKey = users.getUserKey();
+                    notifyDataSetChanged();
+                    mFirebaseDatabase.getReference().child("toDoList").child(eventKey).child("tasksList").child(taskKey).child("users").child(userKey).removeValue();
+                    Toast.makeText(getApplicationContext(), users.getUserName()+"   "+eventKey+"    "+taskKey, Toast.LENGTH_SHORT).show();
+                }
+            });
 
         }
 
@@ -537,8 +673,8 @@ public class TaskDetailsActivity extends AppCompatActivity {
     }
 
     public class FileDetailsAdapter extends RecyclerView.Adapter<FileDetailsAdapter.FileDetailsViewHolder> {
-        private ArrayList<String> items = new ArrayList<>();
-        private ArrayList<String> urls = new ArrayList<>();
+        //        private ArrayList<String> items = new ArrayList<>();
+//        private ArrayList<String> urls = new ArrayList<>();
         RecyclerView recyclerView;
         Context context;
 
@@ -548,11 +684,11 @@ public class TaskDetailsActivity extends AppCompatActivity {
             notifyDataSetChanged();
         }
 
-        public FileDetailsAdapter(RecyclerView recyclerView, Context context, ArrayList<String> items, ArrayList<String> urls) {
+        public FileDetailsAdapter(RecyclerView recyclerView, Context context, ArrayList<String> items_list, ArrayList<String> urls_list) {
             this.recyclerView = recyclerView;
             this.context = context;
-            this.items = items;
-            this.urls = urls;
+            items = items_list;
+            urls = urls_list;
         }
 
         @NonNull
@@ -564,8 +700,22 @@ public class TaskDetailsActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(@NonNull FileDetailsViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull FileDetailsViewHolder holder, final int position) {
             holder.fileName.setText(items.get(position));
+//            holder.deleteIcon.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    Toast.makeText(getApplicationContext(), items.get(position), Toast.LENGTH_SHORT).show();
+//                    //mFirebaseDatabase.getReference().child("toDoList").child(eventKey).child("tasksList").child(taskKey).child("uploads").child(items.get(position)).removeValue();
+//                   // photoRef = storage.getReferenceFromUrl(mImagel);
+////TODO
+////                    recyclerView.
+////                    task_user_list.remove(users);
+////                    String userKey = users.getUserKey();
+////                    notifyDataSetChanged();
+////                    mFirebaseDatabase.getReference().child("toDoList").child(eventKey).child("tasksList").child(taskKey).child("users").child(userKey).removeValue();
+//               }
+//            });
         }
 
         @Override
@@ -578,20 +728,62 @@ public class TaskDetailsActivity extends AppCompatActivity {
 
             TextView fileName;
 
-            public FileDetailsViewHolder(View itemView) {
+            public FileDetailsViewHolder(final View itemView) {
                 super(itemView);
 
                 fileName = itemView.findViewById(R.id.file_name);
+
                 itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View view) {
-                        int position = recyclerView.getChildLayoutPosition(view);
-                        Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse(urls.get(position)));
-//                        intent.setType(Intent.ACTION_VIEW);
-//                        intent.setData(Uri.parse(urls.get(position)));
-                        startActivity(intent);
+                    public void onClick(final View view) {
+
+                        fileDialog = new Dialog(TaskDetailsActivity.this);
+                        fileDialog.setContentView(R.layout.file_dialog);
+                        fileDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                        fileDialog.show();
+
+                        fabClose = fileDialog.findViewById(R.id.fab_close);
+                        fabDelete = fileDialog.findViewById(R.id.fab_delete);
+                        fabDownload = fileDialog.findViewById(R.id.fab_download);
+
+
+                        fabClose.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                fileDialog.cancel();
+                            }
+                        });
+
+                        fabDelete.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View file_view) {
+                                int position = recyclerView.getChildLayoutPosition(view);
+                                mFirebaseDatabase.getReference().child("toDoList").child(eventKey).child("tasksList").child(taskKey).child("uploads").child(items.get(position)).removeValue();
+
+                                urls.remove(position);
+                                items.remove(position);
+                                notifyDataSetChanged();
+                                fileDialog.cancel();
+
+                            }
+                        });
+                        fabDownload.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View file_view) {
+                                int position = recyclerView.getChildLayoutPosition(view);
+                                Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse(urls.get(position)));
+                                startActivity(intent);
+                                fileDialog.cancel();
+                            }
+                        });
+
+                        //   Toast.makeText(TaskDetailsActivity.this, "Hello", Toast.LENGTH_SHORT).show();
+//                        int position = recyclerView.getChildLayoutPosition(view);
+//                        Intent intent = new Intent(Intent.ACTION_VIEW).setData(Uri.parse(urls.get(position)));
+//                        startActivity(intent);
                     }
                 });
+
             }
 
         }
@@ -616,7 +808,6 @@ public class TaskDetailsActivity extends AppCompatActivity {
 
             Users users = userList.get(position);
             Picasso.with(TaskDetailsActivity.this).load(users.getUserPhotoUrl()).transform(new TaskDetailsActivity.UserAdapter.CircleTransform()).into(holder.userImageView);
-
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

@@ -2,19 +2,17 @@ package com.example.dell.eventmanager.Event;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,13 +22,13 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
@@ -40,10 +38,13 @@ import com.example.dell.eventmanager.MainActivity;
 import com.example.dell.eventmanager.R;
 import com.example.dell.eventmanager.SwipeController;
 import com.example.dell.eventmanager.SwipeControllerActions;
+import com.example.dell.eventmanager.SwipeControllerNC;
 import com.example.dell.eventmanager.Task.TasksActivity;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -55,12 +56,6 @@ import com.squareup.picasso.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIPE;
-import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
-import static android.support.v7.widget.helper.ItemTouchHelper.RIGHT;
-
-//import com.daimajia.swipe.SwipeLayout;
 
 public class EventsActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -88,7 +83,11 @@ public class EventsActivity extends AppCompatActivity
 
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mMessagesDatabaseReference;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
     private ChildEventListener mChildEventListener;
+
+    private NestedScrollView nestedScrollView;
     private ProgressBar progressBar;
 
     private ArrayList<Events> event_list = new ArrayList<Events>();
@@ -98,7 +97,7 @@ public class EventsActivity extends AppCompatActivity
     SwipeMenuListView completedSwipeListView;
 
     SwipeController swipeController = null;
-    SwipeController completedswipeController = null;
+    SwipeControllerNC completedswipeController = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +107,15 @@ public class EventsActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_ma);
         toolbar.setTitle("Event Manager");
         setSupportActionBar(toolbar);
+
+        nestedScrollView = findViewById(R.id.nested_scroll_view);
+        nestedScrollView.setVisibility(View.GONE);
+        progressBar = findViewById(R.id.progress_bar);
+        progressBar.getIndeterminateDrawable().setColorFilter(0xFF00BFFF, android.graphics.PorterDuff.Mode.MULTIPLY);
+        progressBar.setVisibility(View.VISIBLE);
+        //progressBar.setScrollBarFadeDuration(10000);
+
+        //progressBar.setVisibility(View.GONE);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -130,7 +138,6 @@ public class EventsActivity extends AppCompatActivity
         mNavUserMail = (TextView) navigationView.getHeaderView(0).findViewById(R.id.mail_google_user);
         mNavUserMail.setText(mGoogleUserMail);
         mNavUserImage = (ImageView) navigationView.getHeaderView(0).findViewById(R.id.image_google_user);
-        //Picasso.with(getBaseContext()).load(mGoogleUserPhoto).transform(new RoundedCornersTransformation(10)).into(mNavUserImage);
         Picasso.with(getBaseContext()).load(mGoogleUserPhoto).transform(new CircleTransform()).into(mNavUserImage);
 
 
@@ -144,16 +151,22 @@ public class EventsActivity extends AppCompatActivity
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         mEventListView.setLayoutManager(mLayoutManager);
 
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
 
         swipeController = new SwipeController(new SwipeControllerActions() {
             @Override
             public void onRightClicked(int position) {
-                Events ev;
-                ev = event_list.get(position);
-                String eventDeleteKey = ev.getEventKey();
-                mEventAdapter.eventList.remove(position);
-                mEventAdapter.notifyDataSetChanged();
-                mMessagesDatabaseReference.child("toDoList").child(eventDeleteKey).removeValue();
+                if ((mFirebaseUser.getEmail().compareTo("dscvitvellore@gmail.com") != 0)) {
+                    Toast.makeText(EventsActivity.this, "You are not allowed to delete the event", Toast.LENGTH_SHORT).show();
+                } else {
+                    Events ev;
+                    ev = event_list.get(position);
+                    String eventDeleteKey = ev.getEventKey();
+                    mEventAdapter.eventList.remove(position);
+                    mEventAdapter.notifyDataSetChanged();
+                    mMessagesDatabaseReference.child("toDoList").child(eventDeleteKey).removeValue();
+                }
             }
 
             @Override
@@ -168,9 +181,8 @@ public class EventsActivity extends AppCompatActivity
                 mCompletedEventAdapter.notifyDataSetChanged();
                 event_list.remove(mEventAdapter.eventList.get(position));
                 mEventAdapter.notifyDataSetChanged();
-
-
             }
+
 
         });
 
@@ -184,19 +196,24 @@ public class EventsActivity extends AppCompatActivity
         });
 
 
-        completedswipeController = new SwipeController(new SwipeControllerActions() {
+        completedswipeController = new SwipeControllerNC(new SwipeControllerActions() {
             @Override
             public void onRightClicked(int position) {
-                Events ev;
-                ev = completed_event_list.get(position);
-                String eventDeleteKey = ev.getEventKey();
-                mCompletedEventAdapter.eventList.remove(position);
-                mCompletedEventAdapter.notifyDataSetChanged();
-                mMessagesDatabaseReference.child("toDoList").child(eventDeleteKey).removeValue();
+                if ((mFirebaseUser.getEmail().compareTo("dscvitvellore@gmail.com") != 0)) {
+                    Toast.makeText(EventsActivity.this, "You are not allowed to delete the event", Toast.LENGTH_SHORT).show();
+                } else {
+                    Events ev;
+                    ev = completed_event_list.get(position);
+                    String eventDeleteKey = ev.getEventKey();
+                    mCompletedEventAdapter.eventList.remove(position);
+                    mCompletedEventAdapter.notifyDataSetChanged();
+                    mMessagesDatabaseReference.child("toDoList").child(eventDeleteKey).removeValue();
+                }
             }
 
             @Override
             public void onLeftClicked(int position) {
+
                 Events e;
                 e = completed_event_list.get(position);
                 String eventKey;
@@ -231,12 +248,6 @@ public class EventsActivity extends AppCompatActivity
         RecyclerView.LayoutManager mCompletedLayoutManager = new LinearLayoutManager(getApplicationContext());
         mCompletedEventListView.setLayoutManager(mCompletedLayoutManager);
 
-//        eventSwipeListView = findViewById(R.id.eventListView);
-//        completedSwipeListView = findViewById(R.id.completedEventsListView);
-//
-//        eventSwipeListView.setMenuCreator(creator);
-//        completedSwipeListView.setMenuCreator(creatorCompleted);
-
         mButtonAddEvent = findViewById(R.id.btn_add_event);
         mButtonAddEvent.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -248,29 +259,20 @@ public class EventsActivity extends AppCompatActivity
             }
         });
 
-        progressBar = findViewById(R.id.progress_bar);
-        progressBar.getIndeterminateDrawable().setColorFilter(0xFF00BFFF, android.graphics.PorterDuff.Mode.MULTIPLY);
-        progressBar.setVisibility(View.VISIBLE);
 
-
-        // FetchListViews();
-        //FetchCompletedListViews();
-        progressBar.setVisibility(View.GONE);
         mMessagesDatabaseReference.child("toDoList").addListenerForSingleValueEvent(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        progressBar.setVisibility(View.GONE);
+                        nestedScrollView.setVisibility(View.VISIBLE);
                         for (DataSnapshot data : dataSnapshot.getChildren()) {
                             if (data.child("completed").getValue().equals("false")) {
 
                                 String date = data.child("date").getValue().toString();
                                 String name = data.child("name").getValue().toString();
                                 String key = data.getKey();
-//                    Toast.makeText(EventsActivity.this," " + dataSnapshot,Toast.LENGTH_SHORT).show();
-
-                                // Events events = dataSnapshot.child("todos").getValue(Events.class);
                                 event_list.add(new Events(name, date, key, "false"));
-                                //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
 
 
                                 mEventAdapter.notifyDataSetChanged();
@@ -280,24 +282,10 @@ public class EventsActivity extends AppCompatActivity
                                 String date = data.child("date").getValue().toString();
                                 String name = data.child("name").getValue().toString();
                                 String key = data.getKey();
-//                    Toast.makeText(EventsActivity.this," " + dataSnapshot,Toast.LENGTH_SHORT).show();
-
-                                // Events events = dataSnapshot.child("todos").getValue(Events.class);
                                 completed_event_list.add(new Events(name, date, key, "true"));
-                                //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-
-
                                 mCompletedEventAdapter.notifyDataSetChanged();
                             }
                         }
-
-                     /*   for (DataSnapshot data : dataSnapshot.getChildren()) {
-                            String date = data.child("date").getValue().toString();
-                            String name = data.child("name").getValue().toString();
-                            event_list.add(new Events(name, date));
-                        }
-
-                        mEventAdapter.notifyDataSetChanged();*/
 
                     }
 
@@ -307,384 +295,6 @@ public class EventsActivity extends AppCompatActivity
                     }
                 }
         );
-
-//
-//        mEventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-//
-//                final Events e = event_list.get(position);
-//                final String eventKey = e.getEventKey();
-//
-//
-//                Intent intentToTaskActivity = new Intent(EventsActivity.this, TasksActivity.class);
-//                intentToTaskActivity.putExtra("eventKey", eventKey);
-//                //intentToTaskActivity.putExtra("taskKey", taskKey);
-//                startActivity(intentToTaskActivity);
-
-/*
-              mMessagesDatabaseReference.child("toDoList").child(eventKey)
-                        //.orderByChild("name")
-                        //.equalTo( e.getEventName()
-
-                        //mEventListView.get getItemAtPosition(position)
-                        //)
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                                String taskKey = mMessagesDatabaseReference.child("toDoList").child(eventKey).child("tasksList").push().getKey();
-                               Toast.makeText(EventsActivity.this, "" + taskKey, Toast.LENGTH_SHORT).show();
-                                Intent intentToTaskActivity = new Intent(EventsActivity.this, TasksActivity.class);
-                                intentToTaskActivity.putExtra("eventKey", eventKey);
-                                intentToTaskActivity.putExtra("taskKey", taskKey);
-                                startActivity(intentToTaskActivity);
-
-
-                                final String addTaskName = "Task 1";
-                                final String addTaskDetail = "Task 1";
-
-                                Tasks t = new Tasks();
-                                t.setTaskName(addTaskName);
-                                t.setTaskDate(addTaskDetail);
-                                t.setTaskKey(taskKey);
-
-
-                                Map<String, Object> childUpdates = new HashMap<>();
-                                childUpdates.put(taskKey, t.toTasksFirebaseObject());
-
-                                //String s = childUpdates.put(taskKey, t.toTasksFirebaseObject()).toString();
-                               mMessagesDatabaseReference.child("toDoList").child(eventKey).child("tasksList").push().setValue(childUpdates.put(taskKey, t.toTasksFirebaseObject()));
-                                Toast.makeText(EventsActivity.this,"Done"   ,Toast.LENGTH_SHORT).show();
-
-*/
-
-                                /*mMessagesDatabaseReference.child("toDoList").child("tasksList").updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
-                                    @Override
-                                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                                        if (databaseError == null) {
-                                            Toast.makeText(EventsActivity.this,"done" ,Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-                                });*/
-
-                               /* if (dataSnapshot.hasChildren()) {
-                                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                        String d = data.child("tasksList").child("taskDetails").getValue().toString();
-                                        //String firstChild = dataSnapshot.child("tasksList").child("taskDetails").getValue().toString();
-                                        Toast.makeText(EventsActivity.this," " + d,Toast.LENGTH_SHORT).show();
-                                    }
-
-                                }*/
-//            }
-//
-//
-//        });
-
-
-//        eventSwipeListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-//            @Override
-//            public boolean onMenuItemClick(final int position, SwipeMenu menu, int index) {
-//                switch (index) {
-//
-//                    case 0:
-//
-//                        Events e;
-//                        e = event_list.get(position);
-//                        String eventKey;
-//                        eventKey = e.getEventKey();
-//
-//                        mMessagesDatabaseReference.child("toDoList").child(eventKey).child("completed").setValue("true");
-//
-//                        completed_event_list.add(mEventAdapter.getItem(position));
-//                        mCompletedEventAdapter.notifyDataSetChanged();
-//
-//                        event_list.remove(mEventAdapter.getItem(position));
-//                        mEventAdapter.notifyDataSetChanged();
-//
-//
-//                       /* Events e;
-//                        e = event_list.get(position);
-//                        String eventKey;
-//                        eventKey = e.getEventKey();
-//
-//                        Events todo = new Events();
-//                        todo.setEventComplete("true");
-//
-//                        Map<String, Object> childUpdates = new HashMap<>();
-//                        childUpdates.put(eventKey, todo.toEventsFirebaseObject());
-//                        mMessagesDatabaseReference.child("toDoList").
-//
-//                                updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
-//                            @Override
-//                            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-//                                if (databaseError == null) {
-//                                    Toast.makeText(EventsActivity.this, "Marking event as completed", Toast.LENGTH_SHORT).show();
-//                                    finish();
-//                                }
-//                            }
-//                        });
-//*/
-//                        break;
-//
-//                    case 1:
-//                        Events ev;
-//                        ev = event_list.get(position);
-//                        String eventDeleteKey = ev.getEventKey();
-//                        mEventAdapter.remove(mEventAdapter.getItem(position));
-//                        mEventAdapter.notifyDataSetChanged();
-//                        mMessagesDatabaseReference.child("toDoList").child(eventDeleteKey).removeValue();
-//
-//                        break;
-//                }
-//                return false;
-//            }
-//        });
-//
-//
-//        completedSwipeListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
-//            @Override
-//            public boolean onMenuItemClick(final int position, SwipeMenu menu, int index) {
-//                switch (index) {
-//
-//                    case 0:
-//                        Events e;
-//                        e = completed_event_list.get(position);
-//                        String eventKey;
-//                        eventKey = e.getEventKey();
-//
-//                        event_list.add(mCompletedEventAdapter.getItem(position));
-//                        mEventAdapter.notifyDataSetChanged();
-//
-//                        completed_event_list.remove(mCompletedEventAdapter.getItem(position));
-//                        mCompletedEventAdapter.notifyDataSetChanged();
-//
-//                        mMessagesDatabaseReference.child("toDoList").child(eventKey).child("completed").setValue("false");
-//
-//
-//                       /* Events e;
-//                        e = completed_event_list.get(position);
-//                        String eventKey;
-//                        eventKey = e.getEventKey();
-//
-//                        Events todo = new Events();
-//                        todo.setEventName(e.getEventName());
-//                        todo.setEventDate(e.getEventDate());
-//                        todo.setEventKey(eventKey);
-//                        todo.setEventComplete("false");
-//
-//                        Map<String, Object> childUpdates = new HashMap<>();
-//                        childUpdates.put(eventKey, todo.toEventsFirebaseObject());
-//                        mMessagesDatabaseReference.child("toDoList").updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
-//                            @Override
-//                            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-//                                if (databaseError == null) {
-//                                    Toast.makeText(EventsActivity.this, "Marking event as not completed", Toast.LENGTH_SHORT).show();
-//                                    finish();
-//                                }
-//                            }
-//                        });*/
-//                        break;
-//
-//                    case 1:
-//                        Events ev;
-//                        ev = completed_event_list.get(position);
-//                        String eventDeleteKey = ev.getEventKey();
-//                        mCompletedEventAdapter.remove(mCompletedEventAdapter.getItem(position));
-//                        mCompletedEventAdapter.notifyDataSetChanged();
-//                        mMessagesDatabaseReference.child("toDoList").child(eventDeleteKey).removeValue();
-//
-//                        break;
-//                }
-//                return false;
-//            }
-//        });
-    }
-
-
-    private void FetchListViews() {
-        progressBar.setVisibility(View.GONE);
-        mMessagesDatabaseReference.child("toDoList").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//                for (DataSnapshot data : dataSnapshot.getChildren()) {
-//
-//                    // Events value = dataSnapshot.getValue(Events.class);
-//                    //event_list.add(value);
-//
-//                    String date = data.child("date").getValue().toString();
-//                    String name = data.child("name").getValue().toString();
-//                    String key = data.getKey();
-//                    Toast.makeText(EventsActivity.this," " + data,Toast.LENGTH_SHORT).show();
-//
-//                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-//                    event_list.add(new Events(name, date, key));
-//                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-//
-//
-//                }
-
-
-                // Events value = dataSnapshot.getValue(Events.class);
-                //event_list.add(value);
-                if (dataSnapshot.child("completed").getValue().equals("false")) {
-
-                    String date = dataSnapshot.child("date").getValue().toString();
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    String key = dataSnapshot.getKey();
-//                    Toast.makeText(EventsActivity.this," " + dataSnapshot,Toast.LENGTH_SHORT).show();
-
-                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-                    event_list.add(new Events(name, date, key, "false"));
-                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-
-
-                    mEventAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                if (dataSnapshot.child("completed").getValue().equals("false")) {
-                    event_list.clear();
-                    // for (DataSnapshot data : dataSnapshot.getChildren()) {
-
-                    //Events value = data.getValue(Events.class);
-                    //event_list.add(value);
-
-                    String date = dataSnapshot.child("date").getValue().toString();
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    String key = dataSnapshot.getKey();
-
-                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-                    event_list.add(new Events(name, date, key, "false"));
-                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-                    //}
-                    mEventAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-                int index = event_list.indexOf(dataSnapshot.getKey());
-                event_list.remove(index);
-                mEventAdapter.notifyDataSetChanged();
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                if (dataSnapshot.child("completed").getValue().equals("false")) {
-                    event_list.clear();
-                    // for (DataSnapshot data : dataSnapshot.getChildren()) {
-
-                    //Events value = data.getValue(Events.class);
-                    //event_list.add(value);
-
-                    String date = dataSnapshot.child("date").getValue().toString();
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    String key = dataSnapshot.getKey();
-
-                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-                    event_list.add(new Events(name, date, key, "false"));
-                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-                    //}
-                    mEventAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-
-            }
-        });
-
-    }
-
-    private void FetchCompletedListViews() {
-        progressBar.setVisibility(View.GONE);
-
-        mMessagesDatabaseReference.child("toDoList").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                // Events value = dataSnapshot.getValue(Events.class);
-                //event_list.add(value);
-                //Toast.makeText(EventsActivity.this, "" + dataSnapshot, Toast.LENGTH_SHORT).show();
-
-                if (dataSnapshot.child("completed").getValue().equals("true")) {
-                    String date = dataSnapshot.child("date").getValue().toString();
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    String key = dataSnapshot.getKey();
-                    //Toast.makeText(EventsActivity.this," Hello" + dataSnapshot,Toast.LENGTH_SHORT).show();
-                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-                    completed_event_list.add(new Events(name, date, key, "true"));
-                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-                    mCompletedEventAdapter.notifyDataSetChanged();
-                    //mCompletedEventAdapter.notifyDataSetChanged();
-
-                }
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-                if (dataSnapshot.child("completed").getValue().equals("true")) {
-                    completed_event_list.clear();
-
-                    // for (DataSnapshot data : dataSnapshot.getChildren()) {
-                    //Events value = data.getValue(Events.class);
-                    //event_list.add(value);
-
-                    String date = dataSnapshot.child("date").getValue().toString();
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    String key = dataSnapshot.getKey();
-
-                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-                    completed_event_list.add(new Events(name, date, key, "true"));
-                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-                    // }
-                    mCompletedEventAdapter.notifyDataSetChanged();
-                    // mCompletedEventAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                if (dataSnapshot.child("completed").getValue().equals("true")) {
-                    completed_event_list.clear();
-
-                    // for (DataSnapshot data : dataSnapshot.getChildren()) {
-                    //Events value = data.getValue(Events.class);
-                    //event_list.add(value);
-
-                    String date = dataSnapshot.child("date").getValue().toString();
-                    String name = dataSnapshot.child("name").getValue().toString();
-                    String key = dataSnapshot.getKey();
-
-                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-                    completed_event_list.add(new Events(name, date, key, "true"));
-                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-                    // }
-                    mCompletedEventAdapter.notifyDataSetChanged();
-                    // mCompletedEventAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
     }
 
     @Override
@@ -693,16 +303,14 @@ public class EventsActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -723,7 +331,6 @@ public class EventsActivity extends AppCompatActivity
                     .signOut(this)
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         public void onComplete(@NonNull Task<Void> task) {
-                            // user is now signed out
                             startActivity(new Intent(EventsActivity.this, MainActivity.class));
                             finish();
                         }
@@ -871,7 +478,6 @@ public class EventsActivity extends AppCompatActivity
 
                     Intent intentToTaskActivity = new Intent(EventsActivity.this, TasksActivity.class);
                     intentToTaskActivity.putExtra("eventKey", eventKey);
-                    //intentToTaskActivity.putExtra("taskKey", taskKey);
                     startActivity(intentToTaskActivity);
                 }
             });
@@ -896,111 +502,4 @@ public class EventsActivity extends AppCompatActivity
             }
         }
     }
-
-    //
-//    SwipeHelper swipeHelper = new SwipeHelper(this, mCompletedEventListView) {
-//        @Override
-//        public void instantiateUnderlayButton(RecyclerView.ViewHolder viewHolder, List<UnderlayButton> underlayButtons) {
-//            underlayButtons.add(new SwipeHelper.UnderlayButton(
-//                    "Delete",
-//                    0,
-//                    Color.parseColor("#FF3C30"),
-//                    new SwipeHelper.UnderlayButtonClickListener() {
-//                        @Override
-//                        public void onClick(int pos) {
-//                            // TODO: onDelete
-//                        }
-//                    }
-//            ));
-//
-//            underlayButtons.add(new SwipeHelper.UnderlayButton(
-//                    "Transfer",
-//                    0,
-//                    Color.parseColor("#FF9502"),
-//                    new SwipeHelper.UnderlayButtonClickListener() {
-//                        @Override
-//                        public void onClick(int pos) {
-//                            // TODO: OnTransfer
-//                        }
-//                    }
-//            ));
-//            underlayButtons.add(new SwipeHelper.UnderlayButton(
-//                    "Unshare",
-//                    0,
-//                    Color.parseColor("#C7C7CB"),
-//                    new SwipeHelper.UnderlayButtonClickListener() {
-//                        @Override
-//                        public void onClick(int pos) {
-//                            // TODO: OnUnshare
-//                        }
-//                    }
-//            ));
-//        }
-//    };
-
-
 }
-
-
-//    private void setListViewHeader() {
-//        LayoutInflater inflater = getLayoutInflater();
-//        View header = inflater.inflate(R.layout.header_list_view, mEventListView, false);
-//        totalClassmates = (TextView) header.findViewById(R.id.total);
-//        swipeLayout = (SwipeLayout)header.findViewById(R.id.swipe_layout);
-//        setSwipeViewFeatures();
-//        mEventListView.addHeaderView(header);
-//    }
-//
-//    private void setSwipeViewFeatures() {
-//        //set show mode.
-//        swipeLayout.setShowMode(SwipeLayout.ShowMode.PullOut);
-//
-//        //add drag edge.(If the BottomView has 'layout_gravity' attribute, this line is unnecessary)
-//        swipeLayout.addDrag(SwipeLayout.DragEdge.Left, findViewById(R.id.bottom_wrapper));
-//
-//        swipeLayout.addSwipeListener(new SwipeLayout.SwipeListener() {
-//            @Override
-//            public void onClose(SwipeLayout layout) {
-//                Log.i(TAG, "onClose");
-//            }
-//
-//            @Override
-//            public void onUpdate(SwipeLayout layout, int leftOffset, int topOffset) {
-//                Log.i(TAG, "on swiping");
-//            }
-//
-//            @Override
-//            public void onStartOpen(SwipeLayout layout) {
-//                Log.i(TAG, "on start open");
-//            }
-//
-//            @Override
-//            public void onOpen(SwipeLayout layout) {
-//                Log.i(TAG, "the BottomView totally show");
-//            }
-//
-//            @Override
-//            public void onStartClose(SwipeLayout layout) {
-//                Log.i(TAG, "the BottomView totally close");
-//            }
-//
-//            @Override
-//            public void onHandRelease(SwipeLayout layout, float xvel, float yvel) {
-//                //when user's hand released.
-//            }
-//        });
-//    }
-//
-//    private void setListViewAdapter() {
-//        mEventAdapter = new EventAdapter(this, R.layout.event_list_item, event_list);
-//        mEventListView.setAdapter(mEventAdapter);
-//
-//        totalClassmates.setText("(" + event_list.size() + ")");
-//    }
-//
-//    public void updateAdapter() {
-//        mEventAdapter.notifyDataSetChanged(); //update adapter
-//        totalClassmates.setText("(" + event_list.size() + ")"); //update total friends in list
-//    }
-//
-//}

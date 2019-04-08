@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,10 +15,11 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.dell.eventmanager.Event.EventsActivity.EventAdapter;
-import com.example.dell.eventmanager.Event.Events;
+import com.example.dell.eventmanager.MainActivity;
 import com.example.dell.eventmanager.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -46,6 +46,9 @@ public class AddEventActivity extends AppCompatActivity {
     EditText addEventDetailEditText;
     Calendar myCalendar;
 
+    ImageView backButton;
+    TextView toolbarName;
+    Button cancleButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -57,10 +60,6 @@ public class AddEventActivity extends AppCompatActivity {
         mFirebaseAuth = FirebaseAuth.getInstance();
         mMessagesDatabaseReference = mFirebaseDatabase.getReference();
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("Add Event");
-        setSupportActionBar(toolbar);
-
         if (Build.VERSION.SDK_INT >= 21) {
             Window window = getWindow();
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
@@ -68,17 +67,31 @@ public class AddEventActivity extends AppCompatActivity {
             window.setStatusBarColor(Color.parseColor("#FF6961"));
         }
 
-        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
-        actionBar.setHomeButtonEnabled(true);
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        toolbarName = findViewById(R.id.toolbar_name);
+        toolbarName.setText("Add Event");
+        backButton = findViewById(R.id.back_button_dsc);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(AddEventActivity.this, MainActivity.class));
+            }
+        });
+
 
         final EditText addEventNameEditText = findViewById(R.id.add_event_name);
         addEventDetailEditText = findViewById(R.id.add_event_detail);
 
+        cancleButton = findViewById(R.id.btn_cancel_add_event);
+        cancleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
 
         myCalendar = Calendar.getInstance();
-        final
-        DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
+
+        final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
 
             @Override
             public void onDateSet(DatePicker view, int year, int monthOfYear,
@@ -102,16 +115,22 @@ public class AddEventActivity extends AppCompatActivity {
         });
 
 
-
         Button btnAddEvent = findViewById(R.id.btn_add_event_to_firebase);
         btnAddEvent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                String key = mMessagesDatabaseReference.child("toDoList").push().getKey();
-
                 final String addEventName = addEventNameEditText.getText().toString();
                 final String addEventDetail = addEventDetailEditText.getText().toString();
+                if (addEventName.isEmpty()) {
+                    Toast.makeText(AddEventActivity.this, "Enter name for the event", Toast.LENGTH_SHORT).show();
+                } else if (addEventDetail.isEmpty()) {
+                    Toast.makeText(AddEventActivity.this, "Enter date for the event", Toast.LENGTH_SHORT).show();
+                }
+                else{
+
+                String key = mMessagesDatabaseReference.child("toDoList").push().getKey();
+
 
                 final Events todo = new Events();
                 todo.setEventName(addEventName);
@@ -125,12 +144,13 @@ public class AddEventActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                         if (databaseError == null) {
-                            Toast.makeText(AddEventActivity.this,"New Event Added",Toast.LENGTH_SHORT).show();
-                            Intent intentToEventsActivity = new Intent(AddEventActivity.this,EventsActivity.class);
+                            Toast.makeText(AddEventActivity.this, "New Event Added", Toast.LENGTH_SHORT).show();
+                            Intent intentToEventsActivity = new Intent(AddEventActivity.this, EventsActivity.class);
                             startActivity(intentToEventsActivity);
                         }
                     }
                 });
+            }
             }
         });
 
@@ -143,12 +163,11 @@ public class AddEventActivity extends AppCompatActivity {
         addEventDetailEditText.setText(sdf.format(myCalendar.getTime()));
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

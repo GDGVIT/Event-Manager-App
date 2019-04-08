@@ -1,6 +1,5 @@
 package com.example.dell.eventmanager.Task;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -15,9 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,20 +22,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.dell.eventmanager.Event.EventsActivity;
 import com.example.dell.eventmanager.Legend.Legend;
 import com.example.dell.eventmanager.Legend.LegendAdapter;
 import com.example.dell.eventmanager.R;
-import com.example.dell.eventmanager.Task.AddTaskActivity.UserAdapter;
 import com.example.dell.eventmanager.User.Users;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -59,6 +54,8 @@ public class AddTaskActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mMessagesDatabaseReference;
     private DatabaseReference mMessagesDatabaseReferenceToUsers;
+
+    private FirebaseUser mFirebaseUser;
     private ChildEventListener mChildEventListener;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
@@ -67,30 +64,33 @@ public class AddTaskActivity extends AppCompatActivity {
     RecyclerView mSelectedUserGridView;
     private UserAdapter mUserAdapter;
     private UserAdapter mSelectedUserAdapter;
-    private ArrayList<Users> user_list = new ArrayList<Users>();
+    private ArrayList<Users> add_task_user_list = new ArrayList<Users>();
     private ArrayList<Users> selected_user_list = new ArrayList<Users>();
 
     private FloatingActionButton fab;
 
     Intent intentFromEventsActivity;
     String eventKey;
-    String lableName;
-    String lableColor;
-    Dialog lableDialog;
-    Dialog userDialog;
-    Button lableConfirmButton;
-    Button lableCancelButton;
+    String labelName = "";
+    String labelColor = "";
+    Dialog labelDialog;
+    Dialog userAddTaskDialog;
+    Button labelConfirmButton;
+    Button labelCancelButton;
     Button userConfirmButton;
     Button userCancelButton;
-    EditText newLableName;
-    Button colorBisque;
-    Button colorDeepSkyBlue;
-    Button colorLime;
+    EditText newLabelName;
+    Button colorGreen;
     Button colorYellow;
-    Button colorCoral;
     Button colorPurple;
-    Button colorPink;
     Button colorRed;
+    Button colorBlue;
+    Button colorBush;
+    Button colorCyan;
+    Button colorMagenta;
+
+
+    TextView toolbarName;
 
 
     @Override
@@ -104,9 +104,11 @@ public class AddTaskActivity extends AppCompatActivity {
         mFirebaseAuth = FirebaseAuth.getInstance();
         mMessagesDatabaseReference = mFirebaseDatabase.getReference();
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("Add Task");
-        setSupportActionBar(toolbar);
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        toolbar.setTitle("Add Task");
+//        setSupportActionBar(toolbar);
 
         if (Build.VERSION.SDK_INT >= 21) {
             Window window = getWindow();
@@ -115,9 +117,13 @@ public class AddTaskActivity extends AppCompatActivity {
             window.setStatusBarColor(Color.parseColor("#FF6961"));
         }
 
-        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
-        actionBar.setHomeButtonEnabled(true);
-        actionBar.setDisplayHomeAsUpEnabled(true);
+//        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+//        actionBar.setHomeButtonEnabled(true);
+//        actionBar.setDisplayHomeAsUpEnabled(true);
+
+        toolbarName = findViewById(R.id.toolbar_name_another);
+        toolbarName.setText("Add Task");
+
 
         final EditText addEventNameEditText = findViewById(R.id.add_task_name);
         final EditText addEventDetailEditText = findViewById(R.id.add_task_details);
@@ -129,19 +135,8 @@ public class AddTaskActivity extends AppCompatActivity {
 
         mMessagesDatabaseReferenceToUsers = mFirebaseDatabase.getReference().child("users");
 
-
-//       mUserGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-//                final Users users = user_list.get(position);
-//                final String userName = users.getUserName();
-//
-//                Toast.makeText(AddTaskActivity.this, userName, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-
         mSelectedUserGridView = findViewById(R.id.grid_view_people_selected);
-        final RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(getApplicationContext(),6);
+        final RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(getApplicationContext(), 6);
         mSelectedUserGridView.setLayoutManager(mLayoutManager);
         mSelectedUserAdapter = new UserAdapter(selected_user_list);
         mSelectedUserGridView.setAdapter(mSelectedUserAdapter);
@@ -151,89 +146,23 @@ public class AddTaskActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                userDialog = new Dialog(AddTaskActivity.this);
-                userDialog.setContentView(R.layout.users_dialog_box);
-                userDialog.show();
+                userAddTaskDialog = new Dialog(AddTaskActivity.this);
+                userAddTaskDialog.setContentView(R.layout.users_dialog_box_add_task);
+                userAddTaskDialog.show();
 
-                //userConfirmButton = userDialog.findViewById(R.id.btn_add_person_confirm);
-                userCancelButton = userDialog.findViewById(R.id.btn_add_person_cancel);
+                userCancelButton = userAddTaskDialog.findViewById(R.id.btn_add_person_cancel_add_task);
 
-                mUserGridView = userDialog.findViewById(R.id.grid_view_people);
-                mUserAdapter = new UserAdapter(user_list);
-                final RecyclerView.LayoutManager mUserLayoutManager = new GridLayoutManager(getApplicationContext() , 6);
+                mUserGridView = userAddTaskDialog.findViewById(R.id.grid_view_people_add_task);
+                mUserAdapter = new UserAdapter(add_task_user_list);
+                final RecyclerView.LayoutManager mUserLayoutManager = new GridLayoutManager(getApplicationContext(), 6);
                 mUserGridView.setLayoutManager(mUserLayoutManager);
                 mUserGridView.setAdapter(mUserAdapter);
 
 
-                /*mUserGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                        final Users users = user_list.get(position);
-                        final String userName = users.getUserName();
-
-                        selected_user_list.add(new Users(users.getUserKey(), users.getUserName(), users.getUserEmail(), users.getUserPhotoUrl()));
-                        mSelectedUserAdapter.notifyDataSetChanged();
-
-                        Toast.makeText(AddTaskActivity.this, userName, Toast.LENGTH_SHORT).show();
-                    }
-                });*/
-
-//                userConfirmButton.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View view) {
-
-
-//                        String legendKey = mMessagesDatabaseReference.child("toDoList").child(eventKey).child("tasksList").push().getKey();
-//                        Toast.makeText(AddTaskActivity.this, "" + legendKey, Toast.LENGTH_SHORT).show();
-//
-//                        lableName = newLableName.getText().toString();
-//
-//                        Legend l = new Legend();
-//
-//                        if (lableName.isEmpty()) {
-//                            Toast.makeText(AddTaskActivity.this, "Please enter a name for the label", Toast.LENGTH_SHORT).show();
-//                        } else {
-//
-//
-//                            l.setLegendName(lableName);
-//                            l.setLegendKey(legendKey);
-//                            l.setLegendColor(lableColor);
-//
-//                            Map<String, Object> childUpdates = new HashMap<>();
-//                            mMessagesDatabaseReference.child("toDoList").child(eventKey).child("legend").push().setValue(childUpdates.put(legendKey, l.toLegendsFirebaseObject()));
-//
-//                            //childUpdates.put(key, todo.toEventsFirebaseObject());
-//                            mMessagesDatabaseReference.child("toDoList").child(eventKey).child("legend").updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
-//                                @Override
-//                                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-//                                    if (databaseError == null) {
-//                                        Toast.makeText(com.example.dell.eventmanager.Task.AddTaskActivity.this, "New Legend Added", Toast.LENGTH_SHORT).show();
-//                                        lableDialog.cancel();
-//                                    }
-//                                }
-//                            });
-//                        }
-
-
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//                    }
-//                });
-
                 userCancelButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        userDialog.cancel();
+                        userAddTaskDialog.cancel();
                     }
                 });
 
@@ -248,100 +177,100 @@ public class AddTaskActivity extends AppCompatActivity {
             }
         });
         final Button btnAddEvent = findViewById(R.id.btn_confirm_add_task);
-        // btnAddEvent.setEnabled(false);
-        Button btnAddLable = findViewById(R.id.btn_add_lable);
-        btnAddLable.setOnClickListener(new View.OnClickListener() {
+
+        Button btnAddLabel = findViewById(R.id.btn_add_label);
+        btnAddLabel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                lableDialog = new Dialog(AddTaskActivity.this);
-                lableDialog.setContentView(R.layout.dialog_box_layout);
-                lableDialog.show();
+                labelDialog = new Dialog(AddTaskActivity.this);
+                labelDialog.setContentView(R.layout.dialog_box_layout);
+                labelDialog.show();
 
 
-                lableConfirmButton = lableDialog.findViewById(R.id.lable_confirm_button);
-                newLableName = lableDialog.findViewById(R.id.new_lable_name_edit_text);
+                labelConfirmButton = labelDialog.findViewById(R.id.label_confirm_button);
+                newLabelName = labelDialog.findViewById(R.id.new_label_name_edit_text);
 
-                lableCancelButton = lableDialog.findViewById(R.id.lable_cancel_button);
-                colorBisque = lableDialog.findViewById(R.id.colorBisque);
-                colorLime = lableDialog.findViewById(R.id.colorLime);
-                colorYellow = lableDialog.findViewById(R.id.colorYellow);
-                colorCoral = lableDialog.findViewById(R.id.colorCoral);
-                colorPurple = lableDialog.findViewById(R.id.colorPurple);
-                colorDeepSkyBlue = lableDialog.findViewById(R.id.colorDeepSkyBlue);
-                colorPink = lableDialog.findViewById(R.id.colorPink);
-                colorRed = lableDialog.findViewById(R.id.colorRed);
+                labelCancelButton = labelDialog.findViewById(R.id.label_cancel_button);
+                colorBlue = labelDialog.findViewById(R.id.colorBlue);
+                colorBush = labelDialog.findViewById(R.id.colorBush);
+                colorYellow = labelDialog.findViewById(R.id.colorYellow);
+                colorCyan = labelDialog.findViewById(R.id.colorCyan);
+                colorPurple = labelDialog.findViewById(R.id.colorPurple);
+                colorMagenta = labelDialog.findViewById(R.id.colorMagenta);
+                colorGreen = labelDialog.findViewById(R.id.colorGreen);
+                colorRed = labelDialog.findViewById(R.id.colorRed);
 
-                lableConfirmButton.setOnClickListener(new View.OnClickListener() {
+                labelConfirmButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableName = getLable();
-                        // btnAddEvent.setEnabled(true);
+                        labelName = getLabel();
+
 
                     }
                 });
 
-                lableCancelButton.setOnClickListener(new View.OnClickListener() {
+                labelCancelButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableDialog.cancel();
-                        // btnAddEvent.setEnabled(true);
+                        labelDialog.cancel();
+
                     }
                 });
 
-                colorBisque.setOnClickListener(new View.OnClickListener() {
+                colorGreen.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "Bisque";
-                        Toast.makeText(AddTaskActivity.this, "Bisque", Toast.LENGTH_SHORT).show();
+                        labelColor = "Green";
+                        Toast.makeText(AddTaskActivity.this, "Green", Toast.LENGTH_SHORT).show();
                     }
                 });
 
-                colorDeepSkyBlue.setOnClickListener(new View.OnClickListener() {
+                colorMagenta.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "DeepSkyBlue";
-                        Toast.makeText(AddTaskActivity.this, "Deep Sky Blue", Toast.LENGTH_SHORT).show();
+                        labelColor = "Magenta";
+                        Toast.makeText(AddTaskActivity.this, "Magenta", Toast.LENGTH_SHORT).show();
                     }
                 });
-                colorLime.setOnClickListener(new View.OnClickListener() {
+                colorCyan.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "Lime";
-                        Toast.makeText(AddTaskActivity.this, "Lime", Toast.LENGTH_SHORT).show();
+                        labelColor = "Cyan";
+                        Toast.makeText(AddTaskActivity.this, "Cyan", Toast.LENGTH_SHORT).show();
                     }
                 });
                 colorYellow.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "Yellow";
+                        labelColor = "Yellow";
                         Toast.makeText(AddTaskActivity.this, "Yellow", Toast.LENGTH_SHORT).show();
                     }
                 });
-                colorCoral.setOnClickListener(new View.OnClickListener() {
+                colorBlue.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "Coral";
-                        Toast.makeText(AddTaskActivity.this, "Coral", Toast.LENGTH_SHORT).show();
+                        labelColor = "Blue";
+                        Toast.makeText(AddTaskActivity.this, "Blue", Toast.LENGTH_SHORT).show();
                     }
                 });
-                colorPink.setOnClickListener(new View.OnClickListener() {
+                colorBush.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "Pink";
-                        Toast.makeText(AddTaskActivity.this, "Pink", Toast.LENGTH_SHORT).show();
+                        labelColor = "Bush";
+                        Toast.makeText(AddTaskActivity.this, "Bush", Toast.LENGTH_SHORT).show();
                     }
                 });
                 colorPurple.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "Purple";
+                        labelColor = "Purple";
                         Toast.makeText(AddTaskActivity.this, "Purple", Toast.LENGTH_SHORT).show();
                     }
                 });
                 colorRed.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        lableColor = "Red";
+                        labelColor = "Red";
                         Toast.makeText(AddTaskActivity.this, "Red", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -354,7 +283,6 @@ public class AddTaskActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 final String taskKey = mMessagesDatabaseReference.child("toDoList").child(eventKey).child("tasksList").push().getKey();
-                Toast.makeText(AddTaskActivity.this, "" + taskKey, Toast.LENGTH_SHORT).show();
                 final String addTaskName = addEventNameEditText.getText().toString();
                 final String addTaskDetail = addEventDetailEditText.getText().toString();
 
@@ -363,15 +291,17 @@ public class AddTaskActivity extends AppCompatActivity {
                 if (addTaskName.isEmpty()) {
                     Toast.makeText(AddTaskActivity.this, "Please enter a name for the task", Toast.LENGTH_SHORT).show();
                 } else if (addTaskDetail.isEmpty()) {
-                    Toast.makeText(AddTaskActivity.this, "Please enter some deatils for the task", Toast.LENGTH_SHORT).show();
-                } else if (lableName.isEmpty()) {
-                    Toast.makeText(AddTaskActivity.this, "Please select a lable name", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddTaskActivity.this, "Please enter some details for the task", Toast.LENGTH_SHORT).show();
+                } else if (labelName.equals("")) {
+                    Toast.makeText(AddTaskActivity.this, "Please select a label name", Toast.LENGTH_SHORT).show();
+                } else if (labelColor.equals("")) {
+                    Toast.makeText(AddTaskActivity.this, "Please select a label name", Toast.LENGTH_SHORT).show();
                 } else {
                     t.setTaskName(addTaskName);
                     t.setTaskDate(addTaskDetail);
                     t.setTaskKey(taskKey);
-                    t.setTaskLable(lableName);
-                    t.setTaskLableColor(lableColor);
+                    t.setTaskLabel(labelName);
+                    t.setTaskLabelColor(labelColor);
                     t.setTaskComplete("false");
 
 
@@ -383,10 +313,11 @@ public class AddTaskActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                             if (databaseError == null) {
-                                Toast.makeText(com.example.dell.eventmanager.Task.AddTaskActivity.this, "New Task Added", Toast.LENGTH_SHORT).show();
-                                //finish();//TODO
-                                Intent intentToTaskActivity = new Intent(AddTaskActivity.this, TasksActivity.class);
-                                startActivity(intentToTaskActivity);
+                                finish();
+//                                Toast.makeText(com.example.dell.eventmanager.Task.AddTaskActivity.this, "New Task Added", Toast.LENGTH_SHORT).show();
+//                                //finish();//TODO
+//                                Intent intentToTaskActivity = new Intent(AddTaskActivity.this, TasksActivity.class);
+//                                startActivity(intentToTaskActivity);
                             }
                         }
                     });
@@ -394,7 +325,8 @@ public class AddTaskActivity extends AppCompatActivity {
                     int size = selected_user_list.size();
                     for (int i = 0; i < size; i++) {
 //
-                        String userKey = mMessagesDatabaseReference.child("toDoList").child(eventKey).child("tasksList").child(taskKey).child("users").push().getKey();
+                        String userKey = selected_user_list.get(i).getUserKey();
+                        // mMessagesDatabaseReference.child("toDoList").child(eventKey).child("tasksList").child(taskKey).child("users").push().getKey();
                         Users u = new Users();
 
                         u.setUserName(selected_user_list.get(i).getUserName());
@@ -432,23 +364,26 @@ public class AddTaskActivity extends AppCompatActivity {
 //        });
     }
 
-    private String getLable() {
+    private String getLabel() {
 
         String legendKey = mMessagesDatabaseReference.child("toDoList").child(eventKey).child("legend").push().getKey();
-        Toast.makeText(AddTaskActivity.this, "" + legendKey, Toast.LENGTH_SHORT).show();
+        // Toast.makeText(AddTaskActivity.this, "" + legendKey, Toast.LENGTH_SHORT).show();
 
-        lableName = newLableName.getText().toString();
+        labelName = newLabelName.getText().toString();
 
         Legend l = new Legend();
 
-        if (lableName.isEmpty()) {
+        if (labelName.isEmpty()) {
             Toast.makeText(AddTaskActivity.this, "Please enter a name for the label", Toast.LENGTH_SHORT).show();
-        } else {
+        } else if (labelColor.isEmpty()) {
+            Toast.makeText(AddTaskActivity.this, "Please select a colour  for the label", Toast.LENGTH_SHORT).show();
+        }
+        else {
 
 
-            l.setLegendName(lableName);
+            l.setLegendName(labelName);
             l.setLegendKey(legendKey);
-            l.setLegendColor(lableColor);
+            l.setLegendColor(labelColor);
 
             Map<String, Object> childUpdates = new HashMap<>();
             mMessagesDatabaseReference.child("toDoList").child(eventKey).child("legend").push().setValue(childUpdates.put(legendKey, l.toLegendsFirebaseObject()));
@@ -459,13 +394,13 @@ public class AddTaskActivity extends AppCompatActivity {
                 public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                     if (databaseError == null) {
                         Toast.makeText(com.example.dell.eventmanager.Task.AddTaskActivity.this, "New Legend Added", Toast.LENGTH_SHORT).show();
-                        lableDialog.cancel();
+                        labelDialog.cancel();
                     }
                 }
             });
         }
 
-        return lableName;
+        return labelName;
     }
 
 
@@ -474,43 +409,33 @@ public class AddTaskActivity extends AppCompatActivity {
         mMessagesDatabaseReferenceToUsers.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                //for (DataSnapshot data : dataSnapshot.getChildren()) {
 
-                String user_name = dataSnapshot.child("user_name").getValue().toString();
-                String user_email = dataSnapshot.child("user_email").getValue().toString();
-                String user_photo = dataSnapshot.child("user_photo").getValue().toString();
-                String user_id = dataSnapshot.getKey();
+                if (mFirebaseUser.getEmail().compareTo("dscvitvellore@gmail.com") != 0) {
 
-                // String key = data.getKey();
-                //Toast.makeText(TasksActivity.this, data.toString(), Toast.LENGTH_SHORT).show();
-                user_list.add(new Users(user_id, user_name, user_email, user_photo));
+                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+                    String user_id = dataSnapshot.getKey();
 
-                // Toast.makeText(TasksActivity.this ,dataSnapshot.getValue().toString()
-                //child(eventKey).child("tasksList").toString()
-                //       , Toast.LENGTH_SHORT).show();
-                //  }
-                //mUserAdapter.notifyDataSetChanged();
-                //TODO
+                    if (mFirebaseUser.getDisplayName().equals(user_name)) {
+                        add_task_user_list.add(new Users(user_id, user_name, user_email, user_photo));
+                    }
+
+
+                } else {
+
+                    String user_name = dataSnapshot.child("user_name").getValue().toString();
+                    String user_email = dataSnapshot.child("user_email").getValue().toString();
+                    String user_photo = dataSnapshot.child("user_photo").getValue().toString();
+                    String user_id = dataSnapshot.getKey();
+
+                    add_task_user_list.add(new Users(user_id, user_name, user_email, user_photo));
+
+                }
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-//                legend_list.clear();
-//                for (DataSnapshot data : dataSnapshot.getChildren()) {
-//
-//                    //Events value = data.getValue(Events.class);
-//                    //event_list.add(value);
-//
-//                    String name = dataSnapshot.child("name").getValue().toString();
-//                    String key = data.getKey();
-//                    String color = dataSnapshot.child("color").getValue().toString();
-//                    // Events events = dataSnapshot.child("todos").getValue(Events.class);
-//                    legend_list.add(new Legend(name,color));
-//                    //    event_list.add(new Events(ds.child("name").getValue().toString(),ds.child("date").getValue().toString()));
-//                }
-//                mLegendAdapter.notifyDataSetChanged();
-
-                //TODO
             }
 
             @Override
@@ -531,12 +456,12 @@ public class AddTaskActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.navigation_drawer, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -546,13 +471,16 @@ public class AddTaskActivity extends AppCompatActivity {
             return true;
         }
         if (id == android.R.id.home) {
-            onBackPressed();
+            // onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-
+    @Override
+    public void onBackPressed() {
+        return;
+    }
 
     public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserAdapterViewHolder> {
 
@@ -577,13 +505,13 @@ public class AddTaskActivity extends AppCompatActivity {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                            final Users users = user_list.get(position);
-                            final String userName = users.getUserName();
+                    final Users users = add_task_user_list.get(position);
+                    final String userName = users.getUserName();
 
-                            selected_user_list.add(new Users(users.getUserKey(), users.getUserName(), users.getUserEmail(), users.getUserPhotoUrl()));
-                            mSelectedUserAdapter.notifyDataSetChanged();
+                    selected_user_list.add(new Users(users.getUserKey(), users.getUserName(), users.getUserEmail(), users.getUserPhotoUrl()));
+                    mSelectedUserAdapter.notifyDataSetChanged();
 
-                            Toast.makeText(AddTaskActivity.this, userName, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddTaskActivity.this, userName, Toast.LENGTH_SHORT).show();
 
                 }
             });

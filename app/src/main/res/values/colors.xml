@@ -5,22 +5,15 @@
     <color name="colorAccent">#D3D3D3</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlack">#000000</color>
-    <color name="colorGrey">#D3D3D3</color>
-    <color name="colorCyan">#46F0F0</color>
+    <color name="colorGrey">#A9A9A9</color>
 
-    <color name="colorLime">#BCF60C</color>
-    <color name="colorRed">#FF6961</color>
-    <color name="colorBlue">#4363D8</color>
-    <color name="colorPurple">#957DAD</color>
-
-    <color name="colorDeepSkyBlue">#00BFFF</color>
-    <color name="colorChartreuse">#7FFF00</color>
-    <color name="colorPeachPuff">	#FFDAB9</color>
-    <color name="colorCoral">	#FF7F50</color>
-
-
-    <color name="colorBisque">#FFE4C4</color>
-    <color name="colorYellow">#FFE119</color>
-    <color name="colorPink">#FF69B4</color>
+    <color name="colorCyan">#67E1F7</color>
+    <color name="colorGreen">#03D5A3</color>
+    <color name="colorRed">#FF607F</color>
+    <color name="colorBlue">#009AFF</color>
+    <color name="colorPurple">#DA5CF0</color>
+    <color name="colorMagenta">#6d67f7</color>
+    <color name="colorBush">#00A56C</color>
+    <color name="colorYellow">#FFBB00</color>
 
 </resources>
